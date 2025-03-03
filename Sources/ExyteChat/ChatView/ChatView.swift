@@ -294,18 +294,18 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
             ZStack(alignment: .bottomTrailing) {
                 list
                 
-                if !isScrolledToBottom {
-                    Button {
-                        NotificationCenter.default.post(name: .onScrollToBottom, object: nil)
-                    } label: {
-                        theme.images.scrollToBottom
-                            .frame(width: 40, height: 40)
-                            .circleBackground(theme.colors.messageFriendBG)
-                            .foregroundStyle(theme.colors.sendButtonBackground)
-                            .shadow(color: .primary.opacity(0.1), radius: 2, y: 1)
-                    }
-                    .padding(8)
-                }
+//                if !isScrolledToBottom {
+//                    Button {
+//                        NotificationCenter.default.post(name: .onScrollToBottom, object: nil)
+//                    } label: {
+//                        theme.images.scrollToBottom
+//                            .frame(width: 40, height: 40)
+//                            .circleBackground(theme.colors.messageFriendBG)
+//                            .foregroundStyle(theme.colors.sendButtonBackground)
+//                            .shadow(color: .primary.opacity(0.1), radius: 2, y: 1)
+//                    }
+//                    .padding(8)
+//                }
             }
             
         case .comments:
