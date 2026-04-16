@@ -265,7 +265,15 @@ public struct ChatView<MessageContent: View, InputViewContent: View, MenuAction:
             }
         }
         // Used to prevent ChatView movement during Emoji Keyboard invocation
-        .ignoresSafeArea(isShowingMenu ? .keyboard : [])
+        .applyIf(ProcessInfo.processInfo.operatingSystemVersion.majorVersion >= 26) {
+            $0
+                .ignoresSafeArea(.keyboard)
+                .padding(.bottom, isShowingMenu ? 0 : keyboardState.keyboardFrame.height)
+        }
+        .applyIf(ProcessInfo.processInfo.operatingSystemVersion.majorVersion < 26) {
+            $0
+                .ignoresSafeArea(isShowingMenu ? .keyboard : [])
+        }
     }
     
     var waitingForNetwork: some View {

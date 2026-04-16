@@ -5,6 +5,7 @@
 import Foundation
 import Combine
 import UIKit
+import SwiftUI
 
 public final class KeyboardState: ObservableObject {
     @Published private(set) public var isShown: Bool = false
@@ -24,21 +25,34 @@ public final class KeyboardState: ObservableObject {
 
 private extension KeyboardState {
     func subscribeKeyboardNotifications() {
-        let pub = Publishers.Merge(
-            NotificationCenter.default
-                .publisher(for: UIResponder.keyboardWillShowNotification)
-                .compactMap { $0.userInfo?[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue }
-                .map { $0.cgRectValue },
+        NotificationCenter.default
+            .publisher(for: UIResponder.keyboardWillShowNotification)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] notification in
+                guard let self,
+                      let userInfo = notification.userInfo,
+                      let frame = (userInfo[UIResponder.keyboardFrameEndUserInfoKey] as? NSValue)?.cgRectValue else { return }
+                let duration = (userInfo[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.25
+                let curveRaw = (userInfo[UIResponder.keyboardAnimationCurveUserInfoKey] as? UInt) ?? 7
+                let curve = UIView.AnimationCurve(rawValue: Int(curveRaw)) ?? .easeInOut
+                withAnimation(.interpolatingSpring(duration: duration, bounce: curve == .easeInOut ? 0 : 0.05)) {
+                    self.keyboardFrame = frame
+                    self.isShown = true
+                }
+            }
+            .store(in: &subscriptions)
 
-            NotificationCenter.default
-                .publisher(for: UIResponder.keyboardWillHideNotification)
-                .map { _ in .zero }
-        )
-        .receive(on: RunLoop.main)
-        
-        // Assign the CGRect to keyboardFrame and store the sub
-        pub.assign(to: \.keyboardFrame, on: self).store(in: &subscriptions)
-        // Map the CGRect into a Bool, assign it to isShown and store the sub
-        pub.map { $0 != .zero }.assign(to: \.isShown, on: self).store(in: &subscriptions)
+        NotificationCenter.default
+            .publisher(for: UIResponder.keyboardWillHideNotification)
+            .receive(on: RunLoop.main)
+            .sink { [weak self] notification in
+                guard let self else { return }
+                let duration = (notification.userInfo?[UIResponder.keyboardAnimationDurationUserInfoKey] as? Double) ?? 0.25
+                withAnimation(.interpolatingSpring(duration: duration, bounce: 0)) {
+                    self.keyboardFrame = .zero
+                    self.isShown = false
+                }
+            }
+            .store(in: &subscriptions)
     }
 }
